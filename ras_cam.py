@@ -145,6 +145,7 @@ while True:
     if cv2.waitKey(1) == ord('q'):
         break
 
+GPIO.output(buzzer, GPIO.LOW)
 GPIO.cleanup()
 cv2.destroyAllWindows()
 videostream.stop()
