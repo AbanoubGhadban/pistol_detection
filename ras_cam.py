@@ -7,13 +7,15 @@ from object_detection.utils import visualization_utils as viz_utils
 import os
 from threading import Thread
 
-# os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-if tf.test.gpu_device_name():
-    print('GPU found')
-    time.sleep(1)
-else:
-    print("No GPU found")
-    time.sleep(1)
+#Libraries
+import RPi.GPIO as GPIO
+#Disable warnings (optional)
+GPIO.setwarnings(False)
+#Select GPIO mode
+GPIO.setmode(GPIO.BCM)
+#Set buzzer - pin 23 as output
+buzzer=23 
+GPIO.setup(buzzer,GPIO.OUT)
 
 PATH_TO_MODEL_DIR = "pistol_model50000/saved_model"
 PATH_TO_LABELS = "label_map.pbtxt"
@@ -98,6 +100,11 @@ while True:
     # Convert to numpy arrays, and take index [0] to remove the batch dimension.
     # We're only interested in the first num_detections.
     num_detections = int(detections.pop('num_detections'))
+    if num_detections > 0:
+        GPIO.output(buzzer,GPIO.HIGH)
+    else:
+        GPIO.output(buzzer,GPIO.LOW)
+
     detections = {key: value[0, :num_detections].numpy()
                   for key, value in detections.items()}
     detections['num_detections'] = num_detections
@@ -131,5 +138,6 @@ while True:
     if cv2.waitKey(1) == ord('q'):
         break
 
+GPIO.cleanup()
 cv2.destroyAllWindows()
 videostream.stop()
