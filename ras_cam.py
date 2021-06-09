@@ -7,15 +7,15 @@ from object_detection.utils import visualization_utils as viz_utils
 import os
 from threading import Thread
 
-#Libraries
+# Libraries
 import RPi.GPIO as GPIO
-#Disable warnings (optional)
+# Disable warnings (optional)
 GPIO.setwarnings(False)
-#Select GPIO mode
+# Select GPIO mode
 GPIO.setmode(GPIO.BCM)
-#Set buzzer - pin 23 as output
-buzzer=23 
-GPIO.setup(buzzer,GPIO.OUT)
+# Set buzzer - pin 23 as output
+buzzer = 23
+GPIO.setup(buzzer, GPIO.OUT)
 
 PATH_TO_MODEL_DIR = "pistol_model50000/saved_model"
 PATH_TO_LABELS = "label_map.pbtxt"
@@ -100,10 +100,6 @@ while True:
     # Convert to numpy arrays, and take index [0] to remove the batch dimension.
     # We're only interested in the first num_detections.
     num_detections = int(detections.pop('num_detections'))
-    if num_detections > 0:
-        GPIO.output(buzzer,GPIO.HIGH)
-    else:
-        GPIO.output(buzzer,GPIO.LOW)
 
     detections = {key: value[0, :num_detections].numpy()
                   for key, value in detections.items()}
@@ -112,6 +108,17 @@ while True:
     # detection_classes should be ints.
     detections['detection_classes'] = detections['detection_classes'].astype(
         np.int64)
+
+    scores = detections['detection_scores']
+    has_weapons = False
+    for s in scores:
+        if s >= .5:
+            has_weapons = True
+            break
+    if has_weapons:
+        GPIO.output(buzzer, GPIO.HIGH)
+    else:
+        GPIO.output(buzzer, GPIO.LOW)
 
     image_np_with_detections = image_np.copy()
 
